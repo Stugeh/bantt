@@ -1,11 +1,10 @@
 package com.bantt.plugins
 
-import io.ktor.server.routing.*
-import io.ktor.http.*
-import io.ktor.server.locations.*
+import com.bantt.services.UserService
 import io.ktor.server.application.*
+import io.ktor.server.locations.*
 import io.ktor.server.response.*
-import io.ktor.server.request.*
+import io.ktor.server.routing.*
 
 fun Application.configureRouting() {
     install(Locations) {
@@ -13,6 +12,7 @@ fun Application.configureRouting() {
 
     routing {
         get("/") {
+            UserService().test()
             call.respondText("Hello World!")
         }
         get<MyLocation> {
