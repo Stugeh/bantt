@@ -1,7 +1,7 @@
 package com.bantt.services
 
-import com.bantt.dao.ChannelRepository
 import com.bantt.models.Channel
+import com.bantt.repositories.ChannelRepository
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.litote.kmongo.json

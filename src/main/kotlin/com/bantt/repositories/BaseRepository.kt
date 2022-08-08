@@ -1,4 +1,4 @@
-package com.bantt.dao
+package com.bantt.repositories
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -8,8 +8,8 @@ import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.json
 import java.util.*
 
-abstract class BaseDao<T : Any> {
-    protected abstract val collection: CoroutineCollection<T>
+abstract class BaseRepository<T : Any> {
+    abstract val collection: CoroutineCollection<T>
 
     fun getAll(): String = collection.find().json
 

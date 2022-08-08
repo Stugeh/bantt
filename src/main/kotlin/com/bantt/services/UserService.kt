@@ -1,16 +1,23 @@
 package com.bantt.services
 
-import com.bantt.dao.UserRepository
 import com.bantt.models.User
+import com.bantt.repositories.UserRepository
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
-import org.litote.kmongo.json
+import org.litote.kmongo.eq
 
 class UserService : KoinComponent {
-    private val repository = UserRepository()
+    companion object {
+        private val repository = UserRepository().collection
+        fun insertUser(user: User): Boolean {
+            return false
+        }
 
-    fun test(): Boolean {
-        val newUser = User("firstName", "password")
-        return runBlocking { repository.save(newUser.json) }
+        fun getUserByUsername(username: String): User? {
+            runBlocking {
+                repository.findOne(User::username eq username)
+            }
+            return null
+        }
     }
 }
