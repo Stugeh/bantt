@@ -1,12 +1,12 @@
 package com.bantt.models
 
 import org.bson.codecs.pojo.annotations.BsonId
+import org.bson.types.ObjectId
 import java.util.*
 
 data class User(
     val username: String,
     val password: String,
-    val salt: String,
     val subscriptions: List<UUID> = listOf(),
-    @BsonId val id: UUID = UUID.randomUUID()
+    @BsonId val _id: ObjectId = ObjectId()
 )

@@ -42,6 +42,7 @@ dependencies {
     implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")
     implementation("io.insert-koin:koin-core:$koin_version")
     implementation("com.google.code.gson:gson:2.9.0")
+    implementation("org.mindrot:jbcrypt:0.4")
     testImplementation("io.insert-koin:koin-test:$koin_version")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
