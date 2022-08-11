@@ -2,8 +2,8 @@ package com.bantt.plugins
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import com.bantt.models.LoginRequest
 import com.bantt.models.User
-import com.bantt.models.requests.AuthRequest
 import com.bantt.services._userCollection
 import com.bantt.services.getByUsername
 import io.github.cdimascio.dotenv.dotenv
@@ -15,6 +15,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.mindrot.jbcrypt.BCrypt
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.*
 
 
@@ -49,7 +51,7 @@ fun Application.configureSecurity() {
 
     routing {
         post("/signup") {
-            val request = call.receiveOrNull<AuthRequest>() ?: kotlin.run {
+            val request = call.receiveOrNull<LoginRequest>() ?: kotlin.run {
                 call.respond(HttpStatusCode.BadRequest)
                 return@post
             }
@@ -76,7 +78,7 @@ fun Application.configureSecurity() {
             call.respond(HttpStatusCode.OK)
         }
         post("/login") {
-            val request = call.receiveOrNull<AuthRequest>() ?: kotlin.run {
+            val request = call.receiveOrNull<LoginRequest>() ?: kotlin.run {
                 call.respond(HttpStatusCode.BadRequest)
                 return@post
             }
@@ -95,14 +97,20 @@ fun Application.configureSecurity() {
                 return@post
             }
 
+            val monthFromNow = Date.from(
+                LocalDateTime.now().plusMonths(1).atZone(ZoneId.systemDefault()).toInstant()
+            )
+
             val token = JWT.create()
                 .withAudience(audience)
                 .withIssuer(issuer)
                 .withClaim("username", user.username)
-                .withExpiresAt(Date(System.currentTimeMillis() + 60000))
+                .withExpiresAt(monthFromNow)
                 .sign(Algorithm.HMAC256(secret))
-            call.respond(hashMapOf("token" to token))
+
+            call.respond(hashMapOf("token" to "Bearer $token"))
         }
+
         authenticate("auth-jwt") {
             get("/hello") {
                 val principal = call.principal<JWTPrincipal>()
