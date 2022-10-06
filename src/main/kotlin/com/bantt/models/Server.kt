@@ -2,27 +2,26 @@ package com.bantt.models
 
 import org.ktorm.entity.Entity
 import org.ktorm.schema.Table
+import org.ktorm.schema.boolean
 import org.ktorm.schema.date
 import org.ktorm.schema.uuid
-import org.ktorm.schema.varchar
 import java.time.LocalDate
 import java.util.*
 
-interface Message : Entity<Message> {
+interface Server : Entity<Server> {
     val id: UUID
-    val user: User
-    val channel: Channel
-    val body: String
+    val name: String
+    val owner: User
     val createdAt: LocalDate
     val updatedAt: LocalDate
+    val private: Boolean
 }
 
-object Messages : Table<Message>("t_message") {
+
+object Servers : Table<Server>("t_server") {
     val id = uuid("id").primaryKey().bindTo { it.id }
-    val user = uuid("userId").references(Users) { it.user }
-    val channel = uuid("channelId").references(Channels) { it.channel }
-    val body = varchar("body").bindTo { it.body }
+    val owner = uuid("ownerId").references(Users) { it.owner }
+    val private = boolean("private").bindTo { it.private }
     val createdAt = date("createdAt").bindTo { it.createdAt }
     val updatedAt = date("updatedAt").bindTo { it.updatedAt }
 }
-

@@ -1,28 +1,27 @@
 package com.bantt.services
 
-import com.bantt.models.Channel
-import com.bantt.models.User
+import com.bantt.models.*
 import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.runBlocking
-import org.bson.types.ObjectId
-import org.litote.kmongo.coroutine.CoroutineCollection
-import org.litote.kmongo.coroutine.coroutine
-import org.litote.kmongo.eq
-import org.litote.kmongo.json
-import org.litote.kmongo.reactivestreams.KMongo
-import org.litote.kmongo.regex
+import org.ktorm.database.Database
+import org.ktorm.entity.Entity
+import org.ktorm.entity.sequenceOf
+import org.ktorm.schema.Table
 import java.util.*
 
-val _dbClient = KMongo.createClient(dotenv()["MONGO_URI"]).coroutine
-val _database = _dbClient.getDatabase("Bantt")
-val _userCollection = _database.getCollection<User>()
-val _channelsCollection = _database.getCollection<Channel>()
+val _database = Database.connect(dotenv()["DEV_DB"])
+val Database.Subscriptions get() = this.sequenceOf(Subscriptions)
+
+val x get() = Users
 
 /* Generic  methods*/
 fun <T : Any> CoroutineCollection<T>.getAll(): String = this.find().json
 
-fun <T : Any> CoroutineCollection<T>.getById(id: UUID): String? =
-    runBlocking { this@getById.findOneById(id.toString())?.json }
+fun <E : Entity<E>> getById(id: UUID, table: Table<E>): Entity<E>? =
+    runBlocking {
+        println("herehere")
+        sequenceOf(table).find { it.id eq id }
+    }
 
 fun <T : Any> CoroutineCollection<T>.save(body: T): Boolean = try {
     runBlocking { this@save.insertOne(body) }
@@ -50,7 +49,7 @@ fun <T : Any> CoroutineCollection<T>.delete(id: String): Boolean = try {
 
 /* User specific methods */
 
-fun CoroutineCollection<User>.getByUsername(username: String): User? =
+fun CoroutineCollection<User>.getByUsername(username: String): User =
     runBlocking {
         this@getByUsername.findOne(User::username eq username)
     }
