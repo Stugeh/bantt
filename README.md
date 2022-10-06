@@ -13,5 +13,5 @@ This is a work in progress group messaging web app built with kotlin and Svelte 
 * **PostgreSql**
 * **Ktor**
     * A light weight backend framework built exclusively for Kotlin as opposed to something like spring.
-* **Ktorm**
+* **Exposed**
     * facilitates the interaction between the db and the rest of the backend. 

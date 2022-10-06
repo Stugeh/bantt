@@ -1,26 +1,27 @@
 package com.bantt.models
 
-import org.ktorm.entity.Entity
-import org.ktorm.schema.Table
-import org.ktorm.schema.date
-import org.ktorm.schema.uuid
-import org.ktorm.schema.varchar
-import java.time.LocalDate
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.UUIDEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.javatime.datetime
 import java.util.*
 
-interface Channel : Entity<Channel> {
-    val id: UUID
-    val name: String
-    val server: Server
-    val description: String
-    val createdAt: LocalDate
-    val updatedAt: LocalDate
+class Channel(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<Channel>(Channels)
+
+    var name by Channels.name
+    var description by Channels.description
+    var createdAt by Channels.createdAt
+    var updatedAt by Channels.updatedAt
+
+    var server by User referencedOn Channels.server
 }
 
-object Channels : Table<Channel>("t_channel") {
-    val id = uuid("id").primaryKey().bindTo { it.id }
-    val server = uuid("serverId").references(Servers) { it.server }
-    val description = varchar("description").bindTo { it.description }
-    val createdAt = date("createdAt").bindTo { it.createdAt }
-    val updatedAt = date("updatedAt").bindTo { it.updatedAt }
+object Channels : UUIDTable() {
+    val name = varchar("name", 127)
+    val description = varchar("description", 1080)
+    val createdAt = datetime("createdAt")
+    val updatedAt = datetime("modifiedAt")
+    val server = reference("server", Servers)
 }

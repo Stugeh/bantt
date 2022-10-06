@@ -1,18 +1,19 @@
 package com.bantt.models
 
-import org.ktorm.entity.Entity
-import org.ktorm.schema.Table
-import org.ktorm.schema.uuid
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.javatime.datetime
 import java.util.*
 
-interface Subscription : Entity<Subscription> {
-    val id: UUID
-    val user: User
-    val channel: Channel
+class Subscription(id: EntityID<UUID>) : UUIDEntity(id) {
+    val user by User referencedOn Subscriptions.user
+    val channel by Channel referencedOn Subscriptions.channel
+    val createdAt by Subscriptions.createdAt
 }
 
-object Subscriptions : Table<Subscription>("t_subscription") {
-    val id = uuid("id").bindTo { it.id }
-    val userId = uuid("userId").references(Users) { it.user }
-    val channelId = uuid("channelId").references(Channels) { it.channel }
+object Subscriptions : UUIDTable() {
+    val user = reference("user", Users)
+    val channel = reference("channel", Channels)
+    val createdAt = datetime("createdAt")
 }

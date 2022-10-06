@@ -1,28 +1,30 @@
 package com.bantt.models
 
-import org.ktorm.entity.Entity
-import org.ktorm.schema.Table
-import org.ktorm.schema.date
-import org.ktorm.schema.uuid
-import org.ktorm.schema.varchar
-import java.time.LocalDate
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.UUIDEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.javatime.datetime
 import java.util.*
 
-interface Message : Entity<Message> {
-    val id: UUID
-    val user: User
-    val channel: Channel
-    val body: String
-    val createdAt: LocalDate
-    val updatedAt: LocalDate
+class Message(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<Message>(Messages)
+
+    val body by Messages.body
+    val createdAt by Messages.createdAt
+    val updatedAt by Messages.updatedAt
+
+    val user by User referencedOn Messages.user
+    val channel by Channel referencedOn Messages.channel
 }
 
-object Messages : Table<Message>("t_message") {
-    val id = uuid("id").primaryKey().bindTo { it.id }
-    val user = uuid("userId").references(Users) { it.user }
-    val channel = uuid("channelId").references(Channels) { it.channel }
-    val body = varchar("body").bindTo { it.body }
-    val createdAt = date("createdAt").bindTo { it.createdAt }
-    val updatedAt = date("updatedAt").bindTo { it.updatedAt }
+object Messages : UUIDTable() {
+    val body = varchar("body", 1080)
+    val createdAt = datetime("createdAt")
+    val updatedAt = datetime("updatedAt")
+
+    val user = reference("user", Users)
+    val channel = reference("channel", Channels)
+
 }
 

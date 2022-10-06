@@ -1,27 +1,29 @@
 package com.bantt.models
 
-import org.ktorm.entity.Entity
-import org.ktorm.schema.Table
-import org.ktorm.schema.boolean
-import org.ktorm.schema.date
-import org.ktorm.schema.uuid
-import java.time.LocalDate
+
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.UUIDEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.javatime.datetime
 import java.util.*
 
-interface Server : Entity<Server> {
-    val id: UUID
-    val name: String
-    val owner: User
-    val createdAt: LocalDate
-    val updatedAt: LocalDate
-    val private: Boolean
+class Server(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<Server>(Servers)
+
+    val name by Servers.name
+    val private by Servers.private
+    val createdAt by Servers.createdAt
+    val updatedAt by Servers.updatedAt
+
+    val owner by User referencedOn Servers.owner
 }
 
-
-object Servers : Table<Server>("t_server") {
-    val id = uuid("id").primaryKey().bindTo { it.id }
-    val owner = uuid("ownerId").references(Users) { it.owner }
-    val private = boolean("private").bindTo { it.private }
-    val createdAt = date("createdAt").bindTo { it.createdAt }
-    val updatedAt = date("updatedAt").bindTo { it.updatedAt }
+object Servers : UUIDTable() {
+    val name = varchar("name", 128)
+    val private = bool("private")
+    val createdAt = datetime("createdAt")
+    val updatedAt = datetime("updatedAt")
+    
+    val owner = reference("owner", Users)
 }
