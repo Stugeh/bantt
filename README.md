@@ -1,5 +1,5 @@
 # bantt
-This is a work in progress group messaging web app built with kotlin and Svelte running on top of a PostgreSql db.
+This is a work in progress group messaging web app built with kotlin and Svelte running on top of a PostgreSql db. There's some more documentation in the wiki.
 
 ## Tech stack:
 
