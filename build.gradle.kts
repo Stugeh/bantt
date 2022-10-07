@@ -8,6 +8,16 @@ val ktormVersion: String by project
 plugins {
     application
     kotlin("jvm") version "1.7.10"
+    id("org.flywaydb.flyway") version "5.2.4"
+}
+
+
+flyway {
+    url = System.getenv("DB_URL")
+    user = System.getenv("DB_USER")
+    password = System.getenv("DB_PASSWORD")
+    baselineOnMigrate = true
+    locations = arrayOf("filesystem:resources/db/migration")
 }
 
 group = "com.bantt"
@@ -48,7 +58,8 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
     implementation("org.postgresql:postgresql:42.5.0")
-    testImplementation("io.insert-koin:koin-test:$koinVersion")
+    implementation("com.zaxxer:HikariCP:5.0.1")
+    implementation("org.flywaydb:flyway-core:9.4.0")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
 }
