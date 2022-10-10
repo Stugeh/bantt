@@ -26,9 +26,15 @@ val issuer: String = dotenv()["JWT_ISSUER"]
 val audience: String = dotenv()["JWT_AUDIENCE"]
 val myRealm: String = dotenv()["JWT_REALM"]
 
+
+//fun Route.jwtAuth(block: Route) {
+//    println("sadasd")
+//    authenticate("auth-jwt") { block() }
+//}
+
 fun Application.configureSecurity() {
     authentication {
-        jwt("auth-jwt") {
+        jwt {
             realm = myRealm
             verifier(
                 JWT
@@ -61,7 +67,7 @@ fun Application.configureSecurity() {
             // TODO change min length
             val isPwTooShort = request.password.length < 3
             if (areFieldsBlank || isPwTooShort) {
-                call.respond(HttpStatusCode.Conflict)
+                call.respond(HttpStatusCode.BadRequest)
                 return@post
             }
 
@@ -74,8 +80,6 @@ fun Application.configureSecurity() {
                     it[updatedAt] = LocalDateTime.now()
                 }
             }
-
-
             call.respond(HttpStatusCode.OK)
         }
         post("/login") {
@@ -113,8 +117,7 @@ fun Application.configureSecurity() {
 
             call.respond(hashMapOf("token" to "Bearer $token"))
         }
-
-        authenticate("auth-jwt") {
+        authenticate {
             get("/hello") {
                 val principal = call.principal<JWTPrincipal>()
                 val username = principal!!.payload.getClaim("username").asString()
