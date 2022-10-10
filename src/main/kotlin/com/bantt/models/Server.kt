@@ -24,6 +24,11 @@ object Servers : UUIDTable() {
     val private = bool("private")
     val createdAt = datetime("createdAt")
     val updatedAt = datetime("updatedAt")
-    
+
     val owner = reference("owner", Users)
 }
+
+data class NewServer(
+    val name: String,
+    val private: Boolean
+)
