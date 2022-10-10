@@ -2,6 +2,7 @@ package com.bantt.plugins
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import com.bantt.dbQuery
 import com.bantt.models.LoginRequest
 import com.bantt.models.User
 import com.bantt.models.Users
@@ -14,7 +15,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -66,10 +66,12 @@ fun Application.configureSecurity() {
             }
 
             val passwordHash = BCrypt.hashpw(request.password, BCrypt.gensalt())
-            transaction {
+            dbQuery {
                 val user = Users.insertAndGetId {
-                    it[username] = username
+                    it[username] = request.username
                     it[password] = passwordHash
+                    it[createdAt] = LocalDateTime.now()
+                    it[updatedAt] = LocalDateTime.now()
                 }
             }
 
@@ -82,7 +84,9 @@ fun Application.configureSecurity() {
                 return@post
             }
 
-            val user = User.find { Users.username eq request.username }.firstOrNull()
+            val user = dbQuery {
+                User.find { Users.username eq request.username }.firstOrNull()
+            }
 
             if (user == null) {
                 call.respond(HttpStatusCode.Conflict, "Incorrect username or password")
