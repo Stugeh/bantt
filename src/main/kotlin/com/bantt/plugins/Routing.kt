@@ -11,6 +11,7 @@ import io.ktor.server.locations.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import java.time.LocalDateTime
@@ -25,13 +26,27 @@ fun Application.configureRouting() {
         authenticate {
             route("/users") {
                 get {
-                    val users = dbQuery { Users.selectAll() }
+                    val users = dbQuery { Users.selectAll().map(::rowToUser) }
                     call.respond(HttpStatusCode.OK, users)
                 }
+
+                get("{id?}") {
+                    val parsedId = UUID.fromString(call.parameters["id"]) ?: return@get call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Missing id"
+                    )
+                    try {
+                        val user = dbQuery { User[parsedId].toResult() }
+                        call.respond(HttpStatusCode.OK, user)
+                    } catch (e: EntityNotFoundException) {
+                        call.respond(HttpStatusCode.NotFound, e.message.toString())
+                    }
+                }
             }
+
             route("/servers") {
                 get {
-                    val servers = dbQuery { Servers.selectAll() }
+                    val servers = dbQuery { Servers.selectAll().map(::rowToServer) }
                     call.respond(HttpStatusCode.OK, servers)
                 }
 
@@ -40,7 +55,7 @@ fun Application.configureRouting() {
                         HttpStatusCode.BadRequest,
                         "Missing id"
                     )
-                    val server = dbQuery { Server[parsedId] }
+                    val server = dbQuery { Server[parsedId].toResult() }
                     call.respond(HttpStatusCode.OK, server)
                 }
 
