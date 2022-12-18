@@ -39,10 +39,9 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
 
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
-    implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")
-    implementation("io.insert-koin:koin-core:$koinVersion")
+    implementation("io.github.cdimascio:dotenv-kotlin:6.4.0")
     implementation("org.litote.kmongo:kmongo-coroutine:$kmongoVersion")
-    implementation("com.google.code.gson:gson:2.9.0")
+    implementation("com.google.code.gson:gson:2.10")
     implementation("org.mindrot:jbcrypt:0.4")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
