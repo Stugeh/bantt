@@ -2,10 +2,11 @@ package com.bantt.plugins
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.bantt.dbQuery
+
 import com.bantt.models.LoginRequest
 import com.bantt.models.User
-import com.bantt.models.Users
+import com.bantt.services._userCollection
+
 import io.github.cdimascio.dotenv.dotenv
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -14,7 +15,8 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.jetbrains.exposed.sql.insertAndGetId
+import kotlinx.coroutines.runBlocking
+import org.litote.kmongo.eq
 import org.mindrot.jbcrypt.BCrypt
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -58,65 +60,64 @@ fun Application.configureSecurity() {
 
     routing {
         post("/signup") {
-            val request = kotlin.runCatching { call.receiveNullable<LoginRequest>() }.getOrNull() ?: kotlin.run {
-                call.respond(HttpStatusCode.BadRequest)
-                return@post
-            }
+            val response: HttpStatusCode = runBlocking {
+                val request = call.receiveNullable<LoginRequest>()
+                    ?: return@runBlocking HttpStatusCode.BadRequest
 
-            val areFieldsBlank = request.username.isBlank() || request.password.isBlank()
-            // TODO change min length
-            val isPwTooShort = request.password.length < 3
-            if (areFieldsBlank || isPwTooShort) {
-                call.respond(HttpStatusCode.BadRequest)
-                return@post
-            }
+                // TODO change min length
+                val areFieldsBlank = request.username.isBlank() || request.password.isBlank()
+                val pwTooShort = request.password.length < 3
+                if (areFieldsBlank || pwTooShort) return@runBlocking HttpStatusCode.BadRequest
 
-            val passwordHash = BCrypt.hashpw(request.password, BCrypt.gensalt())
-            dbQuery {
-                val user = Users.insertAndGetId {
-                    it[username] = request.username
-                    it[password] = passwordHash
-                    it[createdAt] = LocalDateTime.now()
-                    it[updatedAt] = LocalDateTime.now()
+                val passwordHash = BCrypt.hashpw(request.password, BCrypt.gensalt())
+
+                _userCollection.insertOne(User(request.username, passwordHash))
+                val newUser = _userCollection.findOne(User::username eq request.username)
+
+                if (newUser != null) {
+                    call.respond(HttpStatusCode.OK)
+                    return@runBlocking HttpStatusCode.OK
                 }
+
+                return@runBlocking HttpStatusCode.BadRequest
             }
-            call.respond(HttpStatusCode.OK)
+            call.respond(response)
         }
+
         post("/login") {
-            val request = kotlin.runCatching { call.receiveNullable<LoginRequest>() }.getOrNull() ?: kotlin.run {
-                call.respond(HttpStatusCode.BadRequest)
-                return@post
+            val token: String = runBlocking {
+                val request = call.receiveNullable<LoginRequest>()
+                    ?: return@runBlocking ""
+
+                val user = _userCollection.findOne(User::username eq request.username)
+                    ?: return@runBlocking ""
+
+                val isValidPassword = BCrypt.checkpw(request.password, user.password)
+
+                if (!isValidPassword) {
+                    return@runBlocking ""
+                }
+
+                // month from now
+                val expiryDate = Date.from(
+                    LocalDateTime.now().plusMonths(1).atZone(ZoneId.systemDefault()).toInstant()
+                )
+
+                val token = JWT.create()
+                    .withAudience(audience)
+                    .withIssuer(issuer)
+                    .withClaim("username", user.username)
+                    .withExpiresAt(expiryDate)
+                    .sign(Algorithm.HMAC256(secret))
+
+                return@runBlocking "Bearer $token"
             }
 
-            val user = dbQuery {
-                User.find { Users.username eq request.username }.firstOrNull()
-            }
+            val status = if (token.isNotEmpty()) HttpStatusCode.OK else HttpStatusCode.Unauthorized
 
-            if (user == null) {
-                call.respond(HttpStatusCode.Conflict, "Incorrect username or password")
-                return@post
-            }
-
-            val isValidPassword = BCrypt.checkpw(request.password, user.password)
-
-            if (!isValidPassword) {
-                call.respond(HttpStatusCode.Conflict, "Incorrect username or password")
-                return@post
-            }
-
-            val monthFromNow = Date.from(
-                LocalDateTime.now().plusMonths(1).atZone(ZoneId.systemDefault()).toInstant()
-            )
-
-            val token = JWT.create()
-                .withAudience(audience)
-                .withIssuer(issuer)
-                .withClaim("username", user.username)
-                .withExpiresAt(monthFromNow)
-                .sign(Algorithm.HMAC256(secret))
-
-            call.respond(hashMapOf("token" to "Bearer $token"))
+            call.respond(status, token)
         }
+        
         authenticate {
             get("/hello") {
                 val principal = call.principal<JWTPrincipal>()
