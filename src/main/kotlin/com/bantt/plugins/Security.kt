@@ -75,8 +75,7 @@ fun Application.configureSecurity() {
                 val newUser = _userCollection.findOne(User::username eq request.username)
 
                 if (newUser != null) {
-                    call.respond(HttpStatusCode.OK)
-                    return@runBlocking HttpStatusCode.OK
+                    return@runBlocking HttpStatusCode.Created
                 }
 
                 return@runBlocking HttpStatusCode.BadRequest
@@ -117,7 +116,7 @@ fun Application.configureSecurity() {
 
             call.respond(status, token)
         }
-        
+
         authenticate {
             get("/hello") {
                 val principal = call.principal<JWTPrincipal>()
