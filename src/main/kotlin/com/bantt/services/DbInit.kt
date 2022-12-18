@@ -1,6 +1,6 @@
 package com.bantt.services
 
-import com.bantt.models.Channel
+import com.bantt.models.Server
 import com.bantt.models.User
 import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.runBlocking
@@ -16,7 +16,7 @@ import java.util.*
 val _dbClient = KMongo.createClient(dotenv()["MONGO_URI"]).coroutine
 val _database = _dbClient.getDatabase("Bantt")
 val _userCollection = _database.getCollection<User>()
-val _channelsCollection = _database.getCollection<Channel>()
+val _serverCollection = _database.getCollection<Server>()
 
 /* Generic  methods*/
 fun <T : Any> CoroutineCollection<T>.getAll(): String = this.find().json
@@ -56,5 +56,5 @@ fun CoroutineCollection<User>.getByUsername(username: String): User? =
     }
 
 /* Channel specific methods */
-fun CoroutineCollection<Channel>.getChannelsByName(name: String): List<Channel> =
-    runBlocking { this@getChannelsByName.find(Channel::name regex "/$name/").toList() }
+fun CoroutineCollection<Server>.getChannelsByName(name: String): List<Server> =
+    runBlocking { this@getChannelsByName.find(Server::name regex "/$name/").toList() }
